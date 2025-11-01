@@ -15,7 +15,7 @@ export CELOSS_PARALLEL_SIZE=16384
 
 swift sft \
     --model Qwen/Qwen2.5-VL-7B-Instruct \
-    --model_type doneright \
+    --model_type videonsa \
     --train_type full \
     --deepspeed zero2 \
     --freeze_vit false \
