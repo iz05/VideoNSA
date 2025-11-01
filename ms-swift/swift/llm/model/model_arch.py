@@ -506,7 +506,7 @@ if transformers_ge_4_52:
         ))
     register_model_arch(
         MultiModelKeys(
-            MLLMModelArch.doneright,
+            MLLMModelArch.videonsa,
             language_model='model.language_model',
             aligner='model.visual.merger',
             vision_tower='model.visual',
@@ -523,7 +523,7 @@ else:
         ))
     register_model_arch(
         MultiModelKeys(
-            MLLMModelArch.doneright,
+            MLLMModelArch.videonsa,
             language_model='model',
             aligner='visual.merger',
             vision_tower='visual',
