@@ -147,7 +147,7 @@ class RMModelType:
 
 
 class MLLMModelType:
-    doneright = 'doneright'
+    videonsa = 'videonsa'
     qwen_vl = 'qwen_vl'
     qwen_audio = 'qwen_audio'
     qwen2_vl = 'qwen2_vl'
