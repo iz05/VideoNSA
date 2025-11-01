@@ -5,7 +5,7 @@ from typing import List
 
 
 class LLMModelType:
-    doneright = 'doneright'
+    videonsa = 'videonsa'
     qwen = 'qwen'
     qwen2 = 'qwen2'
     qwen2_5 = 'qwen2_5'
