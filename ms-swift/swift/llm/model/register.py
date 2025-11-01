@@ -290,10 +290,10 @@ def get_model_tokenizer_from_local(model_dir: str,
                     from .model.keye.modeling_keye import KeyeForConditionalGeneration
                     model = KeyeForConditionalGeneration.from_pretrained(
                         model_dir, config=model_config, torch_dtype=torch_dtype, trust_remote_code=True, **model_kwargs)
-                elif 'Qwen' in model_dir or 'checkpoint' in model_dir or 'doneright' in model_dir:
-                    from .model.qwen25_vl.modeling_qwen2_5_vl import DonerightForConditionalGeneration
+                elif 'Qwen' in model_dir or 'checkpoint' in model_dir or 'videonsa' in model_dir:
+                    from .model.qwen25_vl.modeling_qwen2_5_vl import VideoNSAForConditionalGeneration
                     # from transformers import Qwen2_5_VLForConditionalGeneration
-                    model = DonerightForConditionalGeneration.from_pretrained(
+                    model = VideoNSAForConditionalGeneration.from_pretrained(
                         model_dir, config=model_config, torch_dtype=torch_dtype, trust_remote_code=True, **model_kwargs)
                 else:
                     model = automodel_class.from_pretrained(
