@@ -43,6 +43,9 @@ def _qwen_vl_visual_block_forward(
     return x
 
 def patch_qwen_vl_utils(vision_process):
+
+    print(dir(vision_process))
+
     if hasattr(vision_process, '_patch'):
         return
 
@@ -80,7 +83,8 @@ def get_model_tokenizer_qwen2_vl(*args, **kwargs):
         patch_get_input_embeddings(base_model.visual, 'patch_embed')
 
     from qwen_vl_utils import vision_process
-    patch_qwen_vl_utils(vision_process)
+    # TODO patch doesn't work atm, this line shouldn't be commented out!
+    # patch_qwen_vl_utils(vision_process)
     return model, tokenizer
 
 def get_model_tokenizer_videonsa(*args, **kwargs):
