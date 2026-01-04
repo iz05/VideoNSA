@@ -1143,6 +1143,9 @@ class Qwen2_5_VLMixNSA(Qwen2_5_VLAttention):
         query_64[:, 28:56] = vision_only_q
         query_states_padded = query_64.transpose(1, 2).contiguous()
 
+        # HACK
+        import sys
+        sys.path.append('/home/ixzhu/VideoNSA/ms-swift')
         from nsa.nsa import nsa_func
 
         vision_k_transposed = vision_only_k.transpose(1, 2).contiguous()

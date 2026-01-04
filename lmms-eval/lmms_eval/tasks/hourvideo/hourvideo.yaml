@@ -1,0 +1,30 @@
+# hourvideo_val.yaml
+dataset_kwargs:
+  special: True
+
+task: hourvideo_val
+test_split: validation
+
+# Functions to convert a dataset entry to visual or text input for the model
+doc_to_visual: !function utils.hourvideo_doc_to_visual
+doc_to_text: !function utils.hourvideo_doc_to_text
+
+# Target field in your annotation JSON
+doc_to_target: "correct_answer_label"
+
+# Generation parameters for the model
+generation_kwargs:
+  max_new_tokens: 256
+  temperature: 1.0
+  do_sample: True
+  top_k: null
+  top_p: 0.9
+
+# Function to process results into a structured format
+process_results: !function utils.hourvideo_process_results
+
+# LMMS eval specific settings (pre/post prompts)
+lmms_eval_specific_kwargs:
+  default:
+    pre_prompt: ""
+    post_prompt: "Respond with only the letter (A, B, C, D, or E) of the correct option."

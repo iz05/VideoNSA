@@ -53,6 +53,9 @@ from lmms_eval.api.registry import (
 from lmms_eval.caching.cache import load_from_cache, save_to_cache
 from lmms_eval.filters import build_filter_ensemble
 
+from lmms_eval.api.hv_dataset import HourVideoDataset
+from lmms_eval.api.avasd_dataset import AVASDDataset
+
 # HuggingfaceM4/NoCaps contains truncated image in test split
 # Include this inside code block to avoid error
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -436,6 +439,7 @@ class Task(abc.ABC):
         doc_iterator_for_counting = itertools.islice(range(len(self.test_docs())), rank, limit, world_size) if self.has_test_docs() else itertools.islice(range(len(self.validation_docs())), rank, limit, world_size)
 
         num_docs = sum(1 for _ in doc_iterator_for_counting)
+        eval_logger.info(f"Building {num_docs} instances for {self.config.task} on rank {rank}...")
 
         for doc_id, doc in tqdm(
             doc_id_docs,
@@ -867,13 +871,14 @@ class ConfigurableTask(Task):
 
     @retry(stop=(stop_after_attempt(5) | stop_after_delay(60)), wait=wait_fixed(2))
     def download(self, dataset_kwargs=None) -> None:
+        print("In download method...")
         # If the dataset is a video dataset,
         # Recursively search whether their is a zip and unzip it to the huggingface home
         download_config = DownloadConfig()
         download_config.max_retries = dataset_kwargs.get("max_retries", 10) if dataset_kwargs is not None else 10
         download_config.num_proc = dataset_kwargs.get("num_proc", 8) if dataset_kwargs is not None else 8
         download_config.local_files_only = dataset_kwargs.get("local_files_only", False) if dataset_kwargs is not None else False
-        if dataset_kwargs is not None:
+        if dataset_kwargs is not None and not dataset_kwargs['autistic'] and not dataset_kwargs['special']:
             if "From_YouTube" in dataset_kwargs:
 
                 def _download_from_youtube(path):
@@ -1044,7 +1049,43 @@ class ConfigurableTask(Task):
             if "create_link" in dataset_kwargs:
                 dataset_kwargs.pop("create_link")
 
-        if dataset_kwargs is not None and "load_from_disk" in dataset_kwargs and dataset_kwargs["load_from_disk"]:
+        # patch for HourVideoDataset
+        if dataset_kwargs['special']:
+            print("Loading HourVideoDataset...")
+            self.dataset = HourVideoDataset(
+                dataset_path='/home/ixzhu/orcd/pool/HourVideo/v1/video_540ss',
+                json_path='/home/ixzhu/HourVideo/v1.0_release/json/dev_v1.0_annotations.json',
+                sample_config = {
+                    'num_frames': 128,
+                    'sample_type': 'uniform',
+                    'model_patch_size': 16,
+                    'img_shortest_edge': 256,
+                    'img_longest_edge': 360,
+                    'max_img_seq_len': 16500,
+                    'do_resize': True,
+                }
+            )
+            print(f"Dataset has size {len(self.dataset)}")
+
+        # patch for AV-ASD
+        elif dataset_kwargs['autistic']:
+            print("Loading AVASDDataset...")
+            self.dataset = AVASDDataset(
+                dataset_path = '/home/ixzhu/orcd/pool/AV-ASD/AV-ASD/dataset/clips_video',
+                csv_path = '/home/ixzhu/AV-ASD/dataset/csvs/dataset.csv',
+                sample_config = {
+                    'num_frames': 128,
+                    'sample_type': 'uniform',
+                    'model_patch_size': 16,
+                    'img_shortest_edge': 256,
+                    'img_longest_edge': 360,
+                    'max_img_seq_len': 16500,
+                    'do_resize': True,
+                }
+            )
+            print(f"Dataset has size {len(self.dataset)}")
+
+        elif dataset_kwargs is not None and "load_from_disk" in dataset_kwargs and dataset_kwargs["load_from_disk"]:
             # using local task in offline environment, need to process the online dataset into local format via
             # `ds = load_datasets("lmms-lab/MMMU")`
             self.dataset = datasets.load_from_disk(dataset_path=self.DATASET_PATH)
@@ -1064,19 +1105,22 @@ class ConfigurableTask(Task):
 
         # copy dataset, remove image features
         self.dataset_no_image = self.dataset.copy()
-        for doc_name in self.dataset_no_image:
-            remove_cols = []
-            features = self.dataset_no_image[doc_name].features
-            # If it is an Image instance or a Sequence of Image instance. Remove it
-            for feature in features:
-                if isinstance(features[feature], Image):
-                    remove_cols.append(feature)
-                elif isinstance(features[feature], Sequence) and isinstance(features[feature].feature, Image):
-                    remove_cols.append(feature)
-                elif isinstance(features[feature], Audio):
-                    remove_cols.append(feature)
-            for remove_col in remove_cols:
-                self.dataset_no_image[doc_name] = self.dataset_no_image[doc_name].remove_columns(remove_col)
+        if not dataset_kwargs['special'] and not dataset_kwargs['autistic']:
+            for doc_name in self.dataset_no_image:
+                remove_cols = []
+                features = self.dataset_no_image[doc_name].features
+                # If it is an Image instance or a Sequence of Image instance. Remove it
+                for feature in features:
+                    if isinstance(features[feature], Image):
+                        remove_cols.append(feature)
+                    elif isinstance(features[feature], Sequence) and isinstance(features[feature].feature, Image):
+                        remove_cols.append(feature)
+                    elif isinstance(features[feature], Audio):
+                        remove_cols.append(feature)
+                for remove_col in remove_cols:
+                    self.dataset_no_image[doc_name] = self.dataset_no_image[doc_name].remove_columns(remove_col)
+
+        print("Finished download method.")
 
     def has_training_docs(self) -> bool:
         if self.config.training_split is not None:
