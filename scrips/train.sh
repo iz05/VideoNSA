@@ -1,13 +1,16 @@
 PYTORCH_CUDA_ALLOC_CONF='expandable_segments:True'
 export CUDA_VISIBLE_DEVICES=0
 export NPROC_PER_NODE=1
-export VIDEO_MAX_PIXELS=50176
-export IMAGE_MAX_PIXELS=50176
-export MAX_PIXELS=50176
+# export VIDEO_MAX_PIXELS=50176
+# export IMAGE_MAX_PIXELS=50176
+# export MAX_PIXELS=50176
+export VIDEO_MAX_PIXELS=6000  # smaller for testing
+export IMAGE_MAX_PIXELS=6000  # smaller for testing
+export MAX_PIXELS=6000        # smaller for testing
 
 export MASTER_ADDR=localhost
 export MASTER_PORT=29500
-export WORLD_SIZE=8
+export WORLD_SIZE=1
 export RANK=0
 
 export SEQUENCE_PARALLEL_IMPL=ulysses
@@ -29,7 +32,7 @@ swift sft \
     --dataset_shuffle false \
     --data_seed 42 \
     --dataset_num_proc 1 \
-    --split_dataset_ratio 0.001 \
+    --split_dataset_ratio 0 \
     --save_strategy steps \
     --save_steps 200 \
     --torch_dtype bfloat16 \
@@ -40,7 +43,7 @@ swift sft \
     --eval_steps 500 \
     --save_total_limit 5 \
     --logging_steps 10 \
-    --max_length 65536 \
+    --max_length 1000 \
     --warmup_ratio 0.1 \
     --dataloader_num_workers 1 \
     --max_grad_norm 1.0 \
